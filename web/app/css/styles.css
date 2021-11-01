@@ -1,0 +1,54 @@
+body {
+    font-family: 'Roboto', sans-serif;
+}
+
+
+/* ------------------------ Weight ------------------------*/
+#info_div {
+    position: fixed;
+    left: 300px;
+    top: 0px;
+    background: #20c209;
+    width: 1920px;
+    height: 100px;
+}
+
+#weight_text {
+    font-size: 40;
+    color: white;
+    font-weight: bold;
+    position: relative;
+    top: 25px;
+    left: 40px;
+}
+
+#weight_value {
+    font-size: 60;
+    color: white;
+    position: relative;
+    left: 300px;
+    top: -35px;
+}
+
+#prompt_homing {
+    color: rgb(255, 167, 2);
+    position: fixed;
+    font-weight: bold;
+    top: 15px;
+    left: 860px;
+    font-size: 60;
+}
+
+#prompt_limit {
+    color: rgb(255, 167, 2);
+    position: fixed;
+    font-weight: bold;
+    top: 20px;
+    left: 1400px;
+    font-size: 50;
+}
+
+#logo {
+    position: fixed;
+    top: 0px;
+}

@@ -71,7 +71,7 @@ bool ensureThreeComponents(std::vector<double>& param)
   return False;
 }
 
-static bool arm_enabled = true;
+static bool arm_enabled = false;
 
 void triggerCallback(const std_msgs::BoolConstPtr& msg)
 {
