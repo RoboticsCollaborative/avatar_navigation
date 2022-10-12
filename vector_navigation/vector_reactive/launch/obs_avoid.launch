@@ -45,5 +45,5 @@
         <param name="auto_cmd_pub_topic" value="$(arg out_vel_topic)" />
     </node>
 
-    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find vector_navigation)/rviz/obs_avoid.rviz" />
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find vector_reactive)/rviz/obs_avoid.rviz" />
 </launch>
