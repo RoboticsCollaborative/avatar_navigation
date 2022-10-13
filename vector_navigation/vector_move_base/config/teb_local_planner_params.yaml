@@ -1,0 +1,177 @@
+TebLocalPlannerROS:
+  odom_topic: odom
+  map_frame: odom
+
+  # -----------------------------------------------------------
+  ## Trajectory
+  teb_autosize: True
+
+  # temporal resolution of trajectory
+  dt_ref: 0.3
+
+  # Hysteresis for automatic resizing depends on temporal res
+  dt_hysteresis: 0.1
+
+  max_samples: 500
+
+  # Overwrite orientation of local subgoals
+  global_plan_overwrite_orientation: True
+
+  # Max length of subset of global plan to look ahead (3.0)
+  max_global_plan_lookahead_dist: 3.0
+
+  # Up to which pose on plan should feasibility be checked
+  feasibility_check_no_poses: 3
+
+  # Initialise some trajectories with backwards motions
+  allow_init_with_backwards_motion: False
+
+  # Publish planner feedback if True
+  publish_feedback: False
+
+  # Allows via-points to be extracted from the global path
+  global_plan_viapoint_sep: -1
+  global_plan_prune_distance: 1
+
+  # Follow exact path rather than Euclidean approximation, increases CPU time
+  exact_arc_length: False
+
+  # -----------------------------------------------------------
+  ## Robot
+
+  max_vel_x: 1.0
+  max_vel_x_backwards: 0.7
+  max_vel_y: 1.0
+  max_vel_theta: 1.0
+  acc_lim_x: 1.0
+  acc_lim_y: 1.0
+  acc_lim_theta: 1.0
+  min_turning_radius: 0.0 # Diff-drive robots can turn in place
+
+  # types: "point", "circular", "two_circles", "line", "polygon"
+  footprint_model:
+    type: "circular"
+    radius: 0.2 # for type "circular"
+  wheelbase: 0.3
+
+  # -----------------------------------------------------------
+  ## GoalTolerance
+
+  xy_goal_tolerance: 0.2
+  yaw_goal_tolerance: 0.1
+  free_goal_vel: False
+  complete_global_plan: True
+
+  # -----------------------------------------------------------
+  ## Obstacles
+
+  # Minimum desired separation from obstacles (meters)
+  min_obstacle_dist: 0.25
+
+  # Buffer zone around obstacles with non-zero penalty costs
+  # should be larger than min_obstacle_distance to be useful
+  # refer to weight_inflation
+  inflation_dist: 0.6
+
+  # Obstacles in local costmap should be taken into account
+  # each cell is marked as point-obstacle. Small costmap resolution
+  # increases computation time.
+  include_costmap_obstacles: True
+
+  include_dynamic_obstacles: True
+  dynamic_obstacle_inflation_dist: 0.6
+
+  # Limit occupied local costmap obstacles considered for planning
+  # behind the robot
+  costmap_obstacles_behind_robot_dist: 1.5
+
+  obstacle_poses_affected: 15
+  costmap_converter_plugin: ""
+  costmap_converter_spin_thread: True
+  costmap_converter_rate: 5
+
+  # -----------------------------------------------------------
+  ## Optimization
+  optimization_activate: True
+  optimization_verbose: False
+
+  # Number of actual solver iterations called in each outerloop iteration (5)
+  no_inner_iterations: 5
+  # Each outerloop iteration resizes the trajectory according to the desired
+  # temporal resolution dt_ref and invokes the internal optimizer
+  # The total number of solver iterations in each planning cycle is the product
+  # of inner and outer iterations (4)
+  no_outer_iterations: 4
+
+  obstacle_cost_exponent: 4
+
+  # Adds a small margin of safety to penalty functions for hard-constraint approx
+  penalty_epsilon: 0.1
+
+  # Weight for satisfying the maximum allowed translational velocity
+  weight_max_vel_x: 2
+  weight_max_lim_y: 2
+
+  # Weight for satsifying the maximum allowed angular velocity
+  weight_max_vel_theta: 1
+
+  # Weight for satisfying the maximum allowed translational accel
+  weight_acc_lim_x: 1
+  weight_acc_lim_y: 1
+
+  # Weight for satisfying the maximum allowed rotational accel
+  weight_acc_lim_theta: 1
+
+  # Weight for forcing the robot to choose forward movement.
+  # 1000 would almost prevent backward driving
+  weight_kinematics_forward_drive: 1
+  weight_kinematics_turning_radius: 1
+
+  # Weight for contracting the trajectory wrt execution time
+  weight_optimaltime: 1
+
+  # Weight for keeping a minimum distance from obstacles
+  weight_obstacle: 100
+
+  # Weight for the inflation penalty
+  weight_inflation: 0.2
+
+  weight_kinematics_nh: 10
+  weight_dynamic_obstacle: 10
+  weight_dynamic_obstacle_inflation: 0.2
+  weight_viapoint: 1
+
+  weight_adapt_factor: 2
+  weight_shortest_path: 0
+
+  # Homotopy Class Planner
+  enable_homotopy_class_planning: True
+  enable_multithreading: True
+  max_number_classes: 4
+  selection_cost_hysteresis: 1.0
+  selection_prefer_initial_plan: 0.9
+  selection_obst_cost_scale: 100.0
+  selection_alternative_time_cost: False
+
+  roadmap_graph_no_samples: 15
+  roadmap_graph_area_width: 5
+  roadmap_graph_area_length_scale: 1.0
+  h_signature_prescaler: 0.5
+  h_signature_threshold: 0.1
+  obstacle_heading_threshold: 0.45
+  switching_blocking_period: 0.0
+  viapoints_all_candidates: True
+  delete_detours_backwards: True
+  max_ratio_detours_duration_best_duration: 3.0
+  visualize_hc_graph: False
+  visualize_with_time_as_z_axis_scale: False
+
+  # Recovery
+
+  shrink_horizon_backup: True
+  shrink_horizon_min_duration: 10
+  oscillation_recovery: True
+  oscillation_v_eps: 0.1
+  oscillation_omega_eps: 0.1
+  oscillation_recovery_min_duration: 10
+  oscillation_filter_duration: 10

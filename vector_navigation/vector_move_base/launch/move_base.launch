@@ -1,0 +1,33 @@
+<launch>
+    <!-- <arg name="local" default="true"/-->
+    <!-- <arg name="wheel_type" value="$(optenv VECTOR_WHEEL_TYPE standard)"/> -->
+    <!--arg name="robot_model" default="$(optenv ROBOT_MODEL vector)"/>  -->
+
+    <node pkg="move_base" type="move_base" respawn="false" name="move_base" clear_params="true">
+        <!-- General & global path planning configuration -->
+        <param name="base_global_planner" value="global_planner/GlobalPlanner" />
+        <rosparam file="$(find vector_move_base)/config/planner_params.yaml" command="load" />
+        <rosparam file="$(find vector_move_base)/config/global_planner_params.yaml" command="load" />
+
+        <!-- Local path planning configuration -->
+        <param name="base_local_planner" value="teb_local_planner/TebLocalPlannerROS" />
+        <rosparam file="$(find vector_move_base)/config/teb_local_planner_params.yaml" command="load" />
+        <!-- <rosparam file="$(find vector_move_base)/config/base_local_planner_params.yaml" command="load" /> -->
+
+        <!-- Common costmap parameters -->
+        <rosparam file="$(find vector_move_base)/config/common_costmap_params.yaml" command="load" ns="global_costmap" />
+        <rosparam file="$(find vector_move_base)/config/common_costmap_params.yaml" command="load" ns="local_costmap" />
+
+        <!-- Local & global costmap setup -->
+        <rosparam file="$(find vector_move_base)/config/local_costmap_params.yaml" command="load" />
+        <rosparam file="$(find vector_move_base)/config/global_costmap_params.yaml" command="load" />
+
+        <remap from="odom" to="/vector/odometry/local_filtered" />
+        <remap from="cmd_vel" to="/vector/cmd_vel" />
+
+        <!-- <rosparam if="$(eval 1 if 'HD'==arg('wheel_type') else 0)" ns="local_costmap">footprint: [[0.38,0.31],[0.38,-0.31],[-0.38,-0.31],[-0.38,0.31]]</rosparam> -->
+        <rosparam ns="local_costmap">footprint: [[0.38,0.31],[0.38,-0.31],[-0.38,-0.31],[-0.38,0.31]]</rosparam>
+    </node>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find vector_move_base)/rviz/move_base.rviz" />
+</launch>

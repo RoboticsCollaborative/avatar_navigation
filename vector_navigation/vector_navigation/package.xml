@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>vector_navigation</name>
+    <version>0.0.1</version>
+    <description>Navigation metapackage for SI Vector</description>
+    <maintainer email="dev@waypointrobotics.com">DEVELOPER</maintainer>
+    <author>DEVELOPER</author>
+    <url type="repository">https://github.com/waypoint_robotics</url>
+    <license>BSD</license>
+    
+    <buildtool_depend>catkin</buildtool_depend>
+    
+    <exec_depend>vector_assisted_teleop</exec_depend>
+    <exec_depend>vector_reactive</exec_depend>
+  
+    <export>
+        <metapackage/>
+    </export>
+</package>
