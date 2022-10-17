@@ -14,6 +14,8 @@
 
     <exec_depend>robalto_navigation</exec_depend>
     <exec_depend>vector_navigation</exec_depend>
+    <exec_depend>avatar_relay_control</exec_depend>
+    <exec_depend>vector_comm</exec_depend>
 
     <export>
         <metapackage/>
