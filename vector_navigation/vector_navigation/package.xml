@@ -12,6 +12,8 @@
     
     <exec_depend>vector_assisted_teleop</exec_depend>
     <exec_depend>vector_reactive</exec_depend>
+    <exec_depend>vector_comm</exec_depend>
+    <exec_depend>vector_msgs</exec_depend>
   
     <export>
         <metapackage/>
