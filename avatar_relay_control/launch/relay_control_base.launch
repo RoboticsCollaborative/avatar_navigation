@@ -1,0 +1,5 @@
+<launch>
+  <arg name="num_relays"/>
+  <arg name="usb_serial_number"/>
+  <node name="relay_control" pkg="avatar_relay_control" type="relay_controller.py" output="screen" args="$(arg usb_serial_number) $(arg num_relays)"/>
+</launch>

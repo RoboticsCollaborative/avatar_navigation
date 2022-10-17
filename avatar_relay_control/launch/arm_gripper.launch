@@ -1,0 +1,7 @@
+<launch>
+  <!-- <arg name="num_relays" default="2" /> -->
+  <!-- <arg name="name_space" default="arm_gripper" /> -->
+  <!-- <arg name="usb_serial_number" default="AB0MSGBD" /> -->
+  <include file="$(find avatar_relay_control)launch/relay_control_base.launch" pass_all_args="true"/>
+
+</launch>

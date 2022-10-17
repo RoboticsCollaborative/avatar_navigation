@@ -1,0 +1,19 @@
+num_relays: 2
+relay_names:
+  -"arm"
+  -"gripper"
+relays:
+  zero:
+    - 1
+    # name: "gripper"
+    # set_start_state: false
+    # start_state: false
+    # turn_off_at_shutdown: false
+  # 1: "arm"
+# relays: {
+#     another_text: {
+#       0:"arm",
+#       1:"gripper",
+#       },
+#     another_number: 12,
+# }

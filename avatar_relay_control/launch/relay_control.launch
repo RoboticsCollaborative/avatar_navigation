@@ -1,0 +1,42 @@
+<launch>
+
+  <group ns="arm_gripper">
+    <!-- Use: "$ python -m serial.tools.list_ports" to get serial numbers of connected devices-->
+    <arg name="usb_serial_number" default="AB0MSGBD" />
+    <arg name="num_relays" default="2" />
+
+    <param name="num_relays" type="int" value="$(arg num_relays)"/>
+    <param name="usb_serial_number" type="str" value="$(arg usb_serial_number)"/>
+
+    <param name="relay_0_name" type="str" value="gripper"/>
+    <param name="relay_1_name" type="str" value="arm"/>
+
+    <param name="relay_0_start_state" type="bool" value="true"/>
+    <param name="relay_1_start_state" type="bool" value="true"/>
+    <!-- <rosparam file="$(find avatar_relay_control)/config/arm_gripper.yaml"/> -->
+
+    <include file="$(find avatar_relay_control)/launch/relay_control_base.launch" pass_all_args="true"/>
+  </group>
+
+  <group ns="accessories">
+    <arg name="num_relays" default="4" />
+    <arg name="usb_serial_number" default="AB0MSPTK" />
+
+    <param name="relay_0_name" type="str" value="camera"/>
+    <param name="relay_1_name" type="str" value="unset"/>
+    <param name="relay_2_name" type="str" value="unset"/>
+    <param name="relay_3_name" type="str" value="unset"/>
+
+    <param name="relay_0_start_state" type="bool" value="false"/>
+    <param name="relay_1_start_state" type="bool" value="false"/>
+    <param name="relay_2_start_state" type="bool" value="false"/>
+    <param name="relay_3_start_state" type="bool" value="false"/>
+
+    <param name="num_relays" type="int" value="$(arg num_relays)"/>
+    <param name="usb_serial_number" type="str" value="$(arg usb_serial_number)"/>
+
+
+    <include file="$(find avatar_relay_control)/launch/relay_control_base.launch" pass_all_args="true"/>
+  </group>
+
+</launch>

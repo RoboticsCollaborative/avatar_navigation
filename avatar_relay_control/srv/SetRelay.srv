@@ -1,0 +1,4 @@
+uint8 relay_number
+std_msgs/Bool relay_status
+---
+uint8 success
