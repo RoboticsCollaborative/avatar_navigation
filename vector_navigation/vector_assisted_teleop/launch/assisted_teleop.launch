@@ -1,0 +1,32 @@
+<launch>
+    <!-- <arg name="local" default="true"/-->
+    <!-- <arg name="wheel_type" value="$(optenv VECTOR_WHEEL_TYPE standard)"/> -->
+    <!--arg name="robot_model" default="$(optenv ROBOT_MODEL vector)"/>  -->
+
+    <node pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" name="teleop" output="screen">
+        <remap from="cmd_vel" to="/vector/teleop/cmd_vel" />
+    </node>
+
+    <node pkg="vector_assisted_teleop" name="vector_assisted_teleop" type="vector_assisted_teleop" clear_params="true">
+        <param name="controller_frequency" value="10.0" />
+        <param name="num_th_samples" value="20" />
+        <param name="num_x_samples" value="6" />
+        <param name="diff_drive" value="false" />
+        <param name="theta_range" value="3.14" />
+        <param name="translational_collision_speed" value="0.0" />
+        <param name="rotational_collision_speed" value="1.0" />
+
+        <rosparam file="$(find vector_assisted_teleop)/config/teb_local_planner_params.yaml" command="load" />
+        <rosparam file="$(find vector_assisted_teleop)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+        <rosparam file="$(find vector_assisted_teleop)/config/costmap_local.yaml" command="load" />
+
+        <remap from="teleop_cmd_vel" to="/vector/teleop/cmd_vel" />
+        <remap from="odom" to="/vector/odometry/local_filtered" />
+        <remap from="cmd_vel" to="/vector/cmd_vel" />
+
+        <!-- <rosparam if="$(eval 1 if 'HD'==arg('wheel_type') else 0)" ns="local_costmap">footprint: [[0.38,0.31],[0.38,-0.31],[-0.38,-0.31],[-0.38,0.31]]</rosparam> -->
+        <rosparam ns="local_costmap">footprint: [[0.38,0.31],[0.38,-0.31],[-0.38,-0.31],[-0.38,0.31]]</rosparam>
+    </node>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find vector_assisted_teleop)/rviz/assisted_teleop.rviz" />
+</launch>

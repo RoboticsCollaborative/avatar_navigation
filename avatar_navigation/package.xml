@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="2">
+    <name>avatar_navigation</name>
+    <version>0.0.0</version>
+    <description>The avatar_navigation metapackage</description>
+
+    <maintainer email="m.zolotas@northeastern.edu">Mark Zolotas</maintainer>
+
+    <license>MIT</license>
+
+    <author>Mark Zolotas</author>
+
+    <buildtool_depend>catkin</buildtool_depend>
+
+    <exec_depend>robalto_navigation</exec_depend>
+    <exec_depend>vector_navigation</exec_depend>
+
+    <export>
+        <metapackage/>
+    </export>
+</package>

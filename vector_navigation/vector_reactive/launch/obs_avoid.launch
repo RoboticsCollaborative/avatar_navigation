@@ -1,0 +1,49 @@
+<launch>
+    <arg name="base_frame_id" default="base_link" />
+
+    <!-- If wanting to use autonomous navigation -->
+    <arg name="autonomous" default="false" />
+
+    <!-- Obstacle avoidance arguments -->
+    <arg name="sim_time" default="0.8" />
+    <arg name="dvel_safe" default="0.6" />
+
+    <!-- Topic names -->
+    <arg name="in_vel_topic" default="/cmd_vel_in" />
+    <arg name="out_vel_topic" default="/vector/cmd_vel" />
+
+    <arg name="scan_topic" default="/vector/base_scan_filtered" />
+    <arg name="odom_topic" default="/vector/odometry/local_filtered" />
+
+    <arg name="goal_topic" default="/move_base_simple/goal" />
+
+    <!-- Obstacle avoidance for safe navigation either autonomously or in a blended input manner -->
+    <node pkg="reactive_assistance" type="reactive_assistance_node" name="reactive_assistance_node" required="true" output="screen">
+        <!-- Actually half-length/width values -->
+        <param name="footprint_length" value="0.3" />
+        <param name="footprint_width" value="0.3" />
+
+        <param name="max_lin_vel" value="0.8" />
+        <param name="max_ang_vel" value="1.0" />
+
+        <param name="sim_time" value="$(arg sim_time)" />
+        <param name="dvel_safe" value="$(arg dvel_safe)" />
+
+        <param name="base_frame" value="$(arg base_frame_id)" />
+        <param name="world_frame" value="odom" />
+
+        <param name="planner_patience" value="20.0" />
+
+        <!-- Subscriber topics -->
+        <param name="laser_sub_topic" value="$(arg scan_topic)" />
+        <param name="odom_sub_topic" value="$(arg odom_topic)" />
+        <param name="cmd_sub_topic" value="$(arg in_vel_topic)" />
+        <param name="goal_sub_topic" value="$(arg goal_topic)" />
+
+        <!-- Publisher topics -->
+        <param name="safe_cmd_pub_topic" value="$(arg out_vel_topic)" />
+        <param name="auto_cmd_pub_topic" value="$(arg out_vel_topic)" />
+    </node>
+
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find vector_reactive)/rviz/obs_avoid.rviz" />
+</launch>
