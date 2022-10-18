@@ -1,0 +1,1 @@
+SUBSYSTEM=="tty", ATTR{idVendor}=="0403", ATTR{idProduct}=="6001", MODE="0777", SYMLINK+="imu"

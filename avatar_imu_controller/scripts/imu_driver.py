@@ -21,7 +21,6 @@ from tf.transformations import *
 
 #settings
 deadband = deg2rad(10)
-
 class TiltController():
     def __init__(self, usb_string, deadband, yaw_deadband, max_x_vel, max_y_vel, max_yaw_vel):
         #initilaize serial object
@@ -65,6 +64,8 @@ class TiltController():
             # ser_string = sample_string #no buffer checking, could be an issue
             # print('Buffer Size ={}'.format(ser.inWaiting())) #check for buffer overrun
             ser_string = self.ser.readline()
+            if (float(serial.__version__) > 3):
+                ser_string = ser_string.decode("utf-8")
             time_stamp = rospy.Time.now()
 
             if ser_string == '': #if nothing is recieved, continue the loop
