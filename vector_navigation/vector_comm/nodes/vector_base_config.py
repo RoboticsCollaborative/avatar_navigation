@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import rospy
 from vector_msgs.msg import Status, ConfigCmd, Battery 
