@@ -2,12 +2,12 @@
 '''script to turn a vector nav IMU orientation into a twist velocty command'''
 
 import rospy
-from numpy import cos, sin, deg2rad
+from numpy import cos, sin, deg2rad, unwrap
 import numpy as np
 import serial
 import time
 from copy import deepcopy
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Bool
 from sensor_msgs.msg import Imu
 from sensor_msgs.msg import MagneticField
 from geometry_msgs.msg import Vector3
@@ -41,7 +41,8 @@ class TiltController():
         self.pub_twist = rospy.Publisher('/vector/cmd_vel', Twist, queue_size = 1)
         self.pub_quat = rospy.Publisher('imu_orientation', Quaternion, queue_size=1)
         self.pub_mag = rospy.Publisher('magnetic_orientation', Vector3, queue_size=1)
-
+        self.sub = rospy.Subscriber('/pressure_status', Bool, self.enable_callback)
+        self.enable = False
         # self.br = tf.TransformBroadcaster()
 
         self.ref_orientation = np.array([0, 0, 0, 1.])
@@ -52,8 +53,15 @@ class TiltController():
         rospy.init_node('tilt_controller', anonymous = False)
         time.sleep(0.1)
 
+    def enable_callback(self, data):
+        if not self.enable and data.data:
+            self.update_ref_to_current()
+            self.enable = True
+        elif self.enable and not data.data:
+            self.enable = False
+
     def update_ref_to_current(self):
-        self.ref_roll, self.pitch, self.yaw = euler_from_quaternion(self.quat)
+        self.ref_roll, self.ref_pitch, self.ref_yaw = euler_from_quaternion(self.quat)
 
     def run(self):
         first_time = True
@@ -85,21 +93,34 @@ class TiltController():
                         self.quat = parse_orientation(data_dict)
                         mag_vec = parse_mag(data_dict)
                         mag_vec /= np.linalg.norm(mag_vec)
-                        if first_time == True:
-                            first_time = False
-                            self.ref_orientation = deepcopy(self.quat)
-                            self.ref_orientation_inv = deepcopy(self.quat)
-                            self.ref_orientation_inv[3] *= -1
-                            self.ref_roll, self.ref_pitch, self.ref_yaw = euler_from_quaternion(self.quat)
-                            ref_mag_vector = deepcopy(mag_vec)
-                            ref_mag_vector /= np.linalg.norm(ref_mag_vector)
 
                         #calculate quaternion difference
                         # quaternion_difference = quaternion_multiply(quat, self.ref_orientation_inv)
                         # roll, pitch, yaw = euler_from_quaternion(quaternion_difference)
                         roll, pitch, yaw = euler_from_quaternion(self.quat)
-                        roll, pitch, yaw = roll - self.ref_roll, pitch - self.ref_pitch, yaw - self.ref_yaw
+                        if first_time == True:
+                            first_time = False
+                            self.ref_orientation = deepcopy(self.quat)
+                            self.ref_orientation_inv = deepcopy(self.quat)
+                            self.ref_orientation_inv[3] *= -1
+                            self.ref_roll, self.ref_pitch, self.ref_yaw = roll, pitch, yaw
+                            ref_mag_vector = deepcopy(mag_vec)
+                            ref_mag_vector /= np.linalg.norm(ref_mag_vector)
+                            prev_roll = roll
+                            prev_pitch = pitch
+                            prev_yaw = yaw
+                        roll = wrap_2pi(roll)
+                        pitch = wrap_2pi(pitch)
+                        yaw = wrap_2pi(yaw)
+                        print(roll)
 
+                        roll = unwrap([prev_roll,roll])[1]
+                        pitch = unwrap([prev_pitch,pitch])[1]
+                        yaw = unwrap([prev_yaw,yaw])[1]
+                        prev_roll = roll
+                        prev_pitch = pitch
+                        prev_yaw = yaw
+                        roll, pitch, yaw = roll - self.ref_roll, pitch - self.ref_pitch, yaw - self.ref_yaw
                         #calculate twist message
                         # roll = apply_deadband(roll, -self.deadband, self.deadband)
                         roll = np.clip(apply_deadband(roll, -self.deadband, self.deadband), -self.max_angle, self.max_angle)
@@ -108,23 +129,24 @@ class TiltController():
                         x_vel = roll*(self.max_x_vel/(self.max_angle-self.deadband))
                         y_vel = pitch*(self.max_y_vel/(self.max_angle-self.deadband))
                         yaw_vel = yaw*(self.max_yaw_vel/(self.max_angle-self.yaw_deadband))
-
                         twist_message = Twist()
-                        # twist_message.linear.x = roll
-                        # twist_message.linear.y = pitch
-                        # twist_message.linear.z = 0
-                        # twist_message.angular.x = 0
-                        # twist_message.angular.y = 0
-                        # twist_message.angular.z = yaw
 
-                        twist_message.linear.x = -x_vel
-                        twist_message.linear.y = y_vel
-                        # twist_message.linear.x = -y_vel
-                        # twist_message.linear.y = -x_vel
-                        twist_message.linear.z = 0
-                        twist_message.angular.x = 0
-                        twist_message.angular.y = 0
-                        twist_message.angular.z = -yaw_vel
+                        if self.enable:
+                            # twist_message.linear.x = roll
+                            # twist_message.linear.y = pitch
+                            # twist_message.linear.z = 0
+                            # twist_message.angular.x = 0
+                            # twist_message.angular.y = 0
+                            # twist_message.angular.z = yaw
+
+                            twist_message.linear.x = -x_vel
+                            twist_message.linear.y = y_vel
+                            # twist_message.linear.x = -y_vel
+                            # twist_message.linear.y = -x_vel
+                            twist_message.linear.z = 0
+                            twist_message.angular.x = 0
+                            twist_message.angular.y = 0
+                            twist_message.angular.z = -yaw_vel
 
                         #calculate magnetic difference
                         # cross_product = np.cross(mag_vec, ref_mag_vector)
@@ -141,8 +163,8 @@ class TiltController():
                         # pub_mag.publish(mag_msg)
                         quat_msg = Quaternion(x = self.quat[0], y = self.quat[1], z = self.quat[2], w = self.quat[3])
                         mag_msg = Vector3(x = mag_vec[0], y = mag_vec[1], z = mag_vec[2])
-                        self.pub_quat.publish(quat_msg)
-                        self.pub_mag.publish(mag_msg)
+                        # self.pub_quat.publish(quat_msg)
+                        # self.pub_mag.publish(mag_msg)
                         self.pub_twist.publish(twist_message)
 
 
@@ -234,7 +256,10 @@ def parse_orientation(imu_dict):
 
 def parse_mag(imu_dict):
     return np.array([imu_dict['mag_x'], imu_dict['mag_y'], imu_dict['mag_z']])
-
+def wrap_2pi(num):
+    if num<0:
+        num = 2*np.pi + num
+    return num
 def build_messages(imu_dict, time_stamp):
     '''Takes a dict generated by parse_imu() and retuns
     a complete IMU.msg message object'''
