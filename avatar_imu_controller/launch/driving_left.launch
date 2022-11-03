@@ -1,0 +1,4 @@
+<launch>
+  <node name="pressure_sensor" pkg="avatar_imu_controller" type="arduino_driver.py" output="screen"/>
+  <node name="tilt_controller" pkg="avatar_imu_controller" type="imu_driver_enable_v2.py" args="left" output="screen"/>
+</launch>

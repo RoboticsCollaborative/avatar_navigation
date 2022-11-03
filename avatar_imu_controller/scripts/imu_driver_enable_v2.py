@@ -15,21 +15,22 @@ from geometry_msgs.msg import Quaternion
 from geometry_msgs.msg import Twist
 import tf
 import csv
+import sys
 from tf.transformations import *
 
 # sample_string = '$VNYMR,-004.328,+001.357,+178.257,+00.2219,-00.0720,+00.4652,+00.226,-00.321,+10.043,-00.001188,+00.001866,-00.007661*6C   '
 
 #settings
-deadband = deg2rad(5)
+# deadband = deg2rad(5)
 roll_deadband = deg2rad(4)
 pitch_deadband = deg2rad(4)
 yaw_deadband = deg2rad(2)
 
 class TiltController():
-    def __init__(self, usb_string, max_x_vel, max_y_vel, max_yaw_vel):
+    def __init__(self, usb_string, max_x_vel, max_y_vel, max_yaw_vel, right_foot = True):
         #initilaize serial object
         self.ser = serial.Serial(usb_string, 115200, timeout = 1)
-
+        self.right_foot = right_foot
         self.max_x_vel = max_x_vel
         self.max_rev_vel = max_x_vel/2
         self.max_y_vel = max_y_vel
@@ -133,6 +134,9 @@ class TiltController():
                         roll = roll
                         pitch = -pitch
                         yaw = -yaw
+                        if not right_foot:
+                            roll *= -1
+                            pitch *= -1
                         # print(roll)
                         #apply deadband and max angle clip
                         roll = np.clip(apply_deadband(roll, -roll_deadband, roll_deadband), -self.max_roll_angle, self.max_roll_angle)
@@ -391,10 +395,21 @@ def build_messages(imu_dict, time_stamp):
 
 if __name__ == '__main__':
 
+    right_foot = True
+    args = sys.args
+    if len(args) > 1:
+        string = args[1]
+        if string == "right":
+            right_foot = True
+        elif string == "left":
+            right_foot = False
+        else:
+            print("***WARNING, incorrect right/left foot argument, must be 'right' or 'left' was: '{}'".format(string))
+
     serial_string = '/dev/ttyUSB0'
-    deadband = deg2rad(5)
-    yaw_deadband = deg2rad(5)
-    tilt_joystick = TiltController(serial_string, 0.3, 0.15, 0.15)
+    # deadband = deg2rad(5)
+    # yaw_deadband = deg2rad(5)
+    tilt_joystick = TiltController(serial_string, 0.3, 0.15, 0.15, right_foot = right_foot)
     tilt_joystick.run()
 
     # try:
