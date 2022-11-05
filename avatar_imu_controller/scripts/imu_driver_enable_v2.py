@@ -21,17 +21,17 @@ from tf.transformations import *
 
 #settings
 deadband = deg2rad(5)
-roll_deadband = deg2rad(4)
-pitch_deadband = deg2rad(4)
+roll_deadband = deg2rad(3)
+pitch_deadband = deg2rad(3)
 yaw_deadband = deg2rad(2)
 
 #acceleration
 acceleration_limit = 0.3 #m/s^2
 #speed
-forward_vel_lim = 8.0
+forward_vel_lim = 0.8
 reverse_vel_lim = 0.2
 side_vel_lim = 0.15
-turn_vel_lim = 0.15 
+turn_vel_lim = 0.25 
 #"Place foot flat on center of pedal to drive"
 
 class TiltController():
@@ -44,7 +44,8 @@ class TiltController():
         self.max_y_vel = side_vel_lim
         self.max_yaw_vel = turn_vel_lim
 
-        self.max_roll_angle = deg2rad(10)
+        self.max_roll_angle = deg2rad(15)
+        self.min_roll_angle = deg2rad(5)
         self.max_pitch_angle = deg2rad(15)
         self.max_yaw_angle = deg2rad(10)
 
@@ -152,19 +153,23 @@ class TiltController():
                         yaw = -yaw
 
                         #apply deadband and max angle clip
-                        roll = np.clip(apply_deadband(roll, -roll_deadband, roll_deadband), -self.max_roll_angle, self.max_roll_angle)
+                        roll = np.clip(apply_deadband(roll, -roll_deadband, roll_deadband), -self.min_roll_angle, self.max_roll_angle)
                         pitch = np.clip(apply_deadband(pitch, -pitch_deadband, pitch_deadband), -self.max_pitch_angle, self.max_pitch_angle)
                         yaw = np.clip(apply_deadband(yaw, -yaw_deadband, yaw_deadband), -self.max_yaw_angle, self.max_yaw_angle)
                         # print(roll)
                         #normalize angle to range
                         # norm_roll = roll/(self.max_roll_angle-roll_deadband)
-                        norm_roll = roll/(self.max_roll_angle)
+                        if roll > 0:
+                            norm_roll = roll/(self.max_roll_angle)
+                        else:
+                            norm_roll = roll/(self.min_roll_angle)
                         norm_pitch = pitch/(self.max_pitch_angle)
                         norm_yaw = yaw/(self.max_yaw_angle)
-                        # print(norm_roll)
+                        print("normalized angle: {}".format(norm_roll))
                         #convert to linear velocity
                         if norm_roll > 0:
                             x_vel = norm_roll*self.max_x_vel
+                            #nonlinear scaling
                         else:
                             x_vel = norm_roll*self.max_rev_vel
                         y_vel = norm_pitch*self.max_y_vel
@@ -173,11 +178,17 @@ class TiltController():
                         #cap maximum acceleration
                         # print("x-vel: {}".format(x_vel))
                         max_vel_dif = loop_time * acceleration_limit
-                        if x_vel > prev_x_vel and x_vel > 0.1:
+                        if x_vel > prev_x_vel and x_vel > 0.1: #change so that it decelerates smoothly
                             # print("driving forward")
                             if prev_x_vel + max_vel_dif < x_vel:
-                                # print("capping acceleration")
+                                print("capping acceleration")
                                 x_vel = prev_x_vel + max_vel_dif
+                        # if x_vel > 0.3:
+                        #     if prev_x_vel + max_vel_dif < x_vel:
+                        #         x_vel = prev_x_vel + max_vel_dif
+                        #     elif prev_x_vel - max_vel_dif > x_vel:
+                        #         x_vel = prev_x_vel - max_vel_dif
+
                         print("x-vel: {}".format(x_vel))
 
                         #store velocity for next iteration
