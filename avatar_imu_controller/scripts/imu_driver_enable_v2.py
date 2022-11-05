@@ -394,7 +394,7 @@ if __name__ == '__main__':
     serial_string = '/dev/ttyUSB0'
     deadband = deg2rad(5)
     yaw_deadband = deg2rad(5)
-    tilt_joystick = TiltController(serial_string, 0.3, 0.15, 0.15)
+    tilt_joystick = TiltController(serial_string, 0.4, 0.15, 0.2)
     tilt_joystick.run()
 
     # try:
