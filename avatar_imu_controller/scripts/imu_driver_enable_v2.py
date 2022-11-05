@@ -26,12 +26,12 @@ pitch_deadband = deg2rad(4)
 yaw_deadband = deg2rad(2)
 
 #acceleration
-acceleration_limit = 0.1 #m/s^2
+acceleration_limit = 0.3 #m/s^2
 #speed
-forward_vel_lim = 0.4
+forward_vel_lim = 8.0
 reverse_vel_lim = 0.2
 side_vel_lim = 0.15
-turn_vel_lim = 0.15
+turn_vel_lim = 0.15 
 #"Place foot flat on center of pedal to drive"
 
 class TiltController():
@@ -44,7 +44,7 @@ class TiltController():
         self.max_y_vel = side_vel_lim
         self.max_yaw_vel = turn_vel_lim
 
-        self.max_roll_angle = deg2rad(15)
+        self.max_roll_angle = deg2rad(10)
         self.max_pitch_angle = deg2rad(15)
         self.max_yaw_angle = deg2rad(10)
 
@@ -53,13 +53,13 @@ class TiltController():
         self.ref_yaw = 0
 
         self.quat = np.array([0, 0, 0, 1.0])
-        #initilaize publisher object
+        #initilaize publisher objectqueue_sise
         # pub_imu = rospy.Publisher('imu_pub', Imu, queue_size = 10)
         # pub_mag = rospy.Publisher('mag_pub', MagneticField, queue_size = 10)
         self.pub_twist = rospy.Publisher('/vector/cmd_vel', Twist, queue_size = 1)
         # self.pub_quat = rospy.Publisher('imu_orientation', Quaternion, queue_size=1)
         # self.pub_mag = rospy.Publisher('magnetic_orientation', Vector3, queue_size=1)
-        self.pub_driving_reminder = rospy.Publisher('/tilt_status', Bool, queue_sise = 1)
+        self.pub_driving_reminder = rospy.Publisher('/tilt_status', Bool, queue_size = 1)
         self.sub = rospy.Subscriber('/pressure_status', Bool, self.enable_callback)
         self.enable = False
         # self.br = tf.TransformBroadcaster()
@@ -89,6 +89,7 @@ class TiltController():
         self.ser.reset_input_buffer() #clear buffer
 
         while not rospy.is_shutdown() :
+            # print("loop start")
             #attempts to read in imu messge if none found, skips
             # ser_string = sample_string #no buffer checking, could be an issue
             # print('Buffer Size ={}'.format(ser.inWaiting())) #check for buffer overrun
@@ -170,12 +171,14 @@ class TiltController():
                         yaw_vel = norm_yaw*self.max_yaw_vel
 
                         #cap maximum acceleration
+                        # print("x-vel: {}".format(x_vel))
                         max_vel_dif = loop_time * acceleration_limit
-                        if x_vel > prev_x_vel:
-                            print("driving forward")
+                        if x_vel > prev_x_vel and x_vel > 0.1:
+                            # print("driving forward")
                             if prev_x_vel + max_vel_dif < x_vel:
-                                print("capping acceleration")
+                                # print("capping acceleration")
                                 x_vel = prev_x_vel + max_vel_dif
+                        print("x-vel: {}".format(x_vel))
 
                         #store velocity for next iteration
                         prev_x_vel = x_vel
@@ -293,7 +296,7 @@ def parse_orientation(imu_dict):
     qw = cy * cp * cr + sy * sp * sr
     qx = cy * cp * sr - sy * sp * cr
     qy = sy * cp * sr + cy * sp * cr
-    qz = sy * cp * cr - cy * sp * sr, forward_vel_lim, , 0.2
+    qz = sy * cp * cr - cy * sp * sr
     return np.array([qx, qy, qz, qw])
 
 def parse_mag(imu_dict):
