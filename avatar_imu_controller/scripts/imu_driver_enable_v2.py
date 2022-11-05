@@ -25,15 +25,24 @@ roll_deadband = deg2rad(4)
 pitch_deadband = deg2rad(4)
 yaw_deadband = deg2rad(2)
 
+#acceleration
+acceleration_limit = 0.1 #m/s^2
+#speed
+forward_vel_lim = 0.4
+reverse_vel_lim = 0.2
+side_vel_lim = 0.15
+turn_vel_lim = 0.15
+#"Place foot flat on center of pedal to drive"
+
 class TiltController():
-    def __init__(self, usb_string, max_x_vel, max_y_vel, max_yaw_vel):
+    def __init__(self, usb_string):
         #initilaize serial object
         self.ser = serial.Serial(usb_string, 115200, timeout = 1)
 
-        self.max_x_vel = max_x_vel
-        self.max_rev_vel = max_x_vel/2
-        self.max_y_vel = max_y_vel
-        self.max_yaw_vel = max_yaw_vel
+        self.max_x_vel = forward_vel_lim
+        self.max_rev_vel = reverse_vel_lim
+        self.max_y_vel = side_vel_lim
+        self.max_yaw_vel = turn_vel_lim
 
         self.max_roll_angle = deg2rad(15)
         self.max_pitch_angle = deg2rad(15)
@@ -277,7 +286,7 @@ def parse_orientation(imu_dict):
     qw = cy * cp * cr + sy * sp * sr
     qx = cy * cp * sr - sy * sp * cr
     qy = sy * cp * sr + cy * sp * cr
-    qz = sy * cp * cr - cy * sp * sr
+    qz = sy * cp * cr - cy * sp * sr, forward_vel_lim, , 0.2
     return np.array([qx, qy, qz, qw])
 
 def parse_mag(imu_dict):
@@ -394,7 +403,7 @@ if __name__ == '__main__':
     serial_string = '/dev/ttyUSB0'
     deadband = deg2rad(5)
     yaw_deadband = deg2rad(5)
-    tilt_joystick = TiltController(serial_string, 0.4, 0.15, 0.2)
+    tilt_joystick = TiltController(serial_string)
     tilt_joystick.run()
 
     # try:
