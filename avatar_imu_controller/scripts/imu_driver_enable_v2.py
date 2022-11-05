@@ -57,11 +57,14 @@ class TiltController():
         # pub_imu = rospy.Publisher('imu_pub', Imu, queue_size = 10)
         # pub_mag = rospy.Publisher('mag_pub', MagneticField, queue_size = 10)
         self.pub_twist = rospy.Publisher('/vector/cmd_vel', Twist, queue_size = 1)
-        self.pub_quat = rospy.Publisher('imu_orientation', Quaternion, queue_size=1)
-        self.pub_mag = rospy.Publisher('magnetic_orientation', Vector3, queue_size=1)
+        # self.pub_quat = rospy.Publisher('imu_orientation', Quaternion, queue_size=1)
+        # self.pub_mag = rospy.Publisher('magnetic_orientation', Vector3, queue_size=1)
+        self.pub_driving_reminder = rospy.Publisher('/tilt_status', Bool, queue_sise = 1)
         self.sub = rospy.Subscriber('/pressure_status', Bool, self.enable_callback)
         self.enable = False
         # self.br = tf.TransformBroadcaster()
+
+        self.prev_time = time.time()
 
         self.ref_orientation = np.array([0, 0, 0, 1.])
         self.ref_mag_vector = np.array([0, 0, 1.])
@@ -92,7 +95,10 @@ class TiltController():
             ser_string = self.ser.readline()
             if (float(serial.__version__) > 3):
                 ser_string = ser_string.decode("utf-8")
-            time_stamp = rospy.Time.now()
+            # time_stamp = rospy.Time.now()
+            time_stamp = time.time()
+            loop_time = time_stamp - self.prev_time
+            self.prev_time = time_stamp
 
             if ser_string == '': #if nothing is recieved, continue the loop
                 rospy.loginfo('No Serial connection to IMU...')
@@ -106,8 +112,6 @@ class TiltController():
                     #attmpe to parse line
                     format_good, data_dict = parse_imu(ser_string)
                     if format_good:
-                        #generate messages
-                        # imu_msg, mag_msg = build_messages(data_dict, time_stamp)
                         self.quat = parse_orientation(data_dict)
                         mag_vec = parse_mag(data_dict)
                         mag_vec /= np.linalg.norm(mag_vec)
@@ -127,6 +131,9 @@ class TiltController():
                             prev_roll = roll
                             prev_pitch = pitch
                             prev_yaw = yaw
+                            prev_x_vel = 0.0
+                            prev_y_vel = 0.0
+                            prev_yaw_vel = 0.0
 
                         roll = unwrap([prev_roll,roll])[1]
                         pitch = unwrap([prev_pitch,pitch])[1]
@@ -142,7 +149,7 @@ class TiltController():
                         roll = roll
                         pitch = -pitch
                         yaw = -yaw
-                        # print(roll)
+
                         #apply deadband and max angle clip
                         roll = np.clip(apply_deadband(roll, -roll_deadband, roll_deadband), -self.max_roll_angle, self.max_roll_angle)
                         pitch = np.clip(apply_deadband(pitch, -pitch_deadband, pitch_deadband), -self.max_pitch_angle, self.max_pitch_angle)
@@ -162,36 +169,36 @@ class TiltController():
                         y_vel = norm_pitch*self.max_y_vel
                         yaw_vel = norm_yaw*self.max_yaw_vel
 
-                        # print(x_vel)
-                        # print("******")
+                        #cap maximum acceleration
+                        max_vel_dif = loop_time * acceleration_limit
+                        if x_vel > prev_x_vel:
+                            print("driving forward")
+                            if prev_x_vel + max_vel_dif < x_vel:
+                                print("capping acceleration")
+                                x_vel = prev_x_vel + max_vel_dif
+
+                        #store velocity for next iteration
+                        prev_x_vel = x_vel
+                        prev_y_vel = y_vel
+                        prev_yaw_vel = yaw_vel
+
+
                         #calculate twist message
                         twist_message = Twist()
                         if self.enable:
-                            # twist_message.linear.x = roll
-                            # twist_message.linear.y = pitch
-                            # twist_message.linear.z = 0
-                            # twist_message.angular.x = 0
-                            # twist_message.angular.y = 0
-                            # twist_message.angular.z = yaw
-
                             twist_message.linear.x = x_vel
                             twist_message.linear.y = y_vel
-                            # twist_message.linear.x = -y_vel
-                            # twist_message.linear.y = -x_vel
                             twist_message.linear.z = 0
                             twist_message.angular.x = 0
                             twist_message.angular.y = 0
                             twist_message.angular.z = yaw_vel
-
-                        #calculate magnetic difference
-                        # cross_product = np.cross(mag_vec, ref_mag_vector)
-                        # angle = np.linalg.norm(cross_product)
-                        # angle = np.arcsin(np.linalg.norm(cross_product))
-
-
-                        #project ref mag vector into current imu orientation frame
-                        #remove z-component
-                        #calculate angular difference
+                        
+                        #send error message if tilting but not enabled
+                        if not self.enable and (np.abs(x_vel)>0.001 or np.abs(y_vel)>0.001 or np.abs(yaw_vel)>0.001):
+                            self.pub_driving_reminder.publish(Bool(True))
+                            print("tilting no sensor")
+                        else:
+                            self.pub_driving_reminder.publish(Bool(False))
 
                         #publish messages
                         # pub_imu.publish(imu_msg)
